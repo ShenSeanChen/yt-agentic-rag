@@ -1,5 +1,5 @@
 # Copyright 2024
-# Directory: yt-rag/app/services/embedding.py
+# Directory: yt-agentic-rag/app/services/embedding.py
 
 """
 Embedding service for generating text embeddings using OpenAI.
@@ -9,7 +9,7 @@ Focused solely on vector embeddings for RAG retrieval.
 import logging
 from typing import List
 import openai
-from ..core.config import get_settings
+from ..config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

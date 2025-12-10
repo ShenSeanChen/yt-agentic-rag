@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 # Copyright 2024
-# Directory: yt-rag/verify_rag.py
+# Directory: yt-agentic-rag/devtools/verify_rag.py
 
 """
-Script to prove we're doing real RAG with vector similarity search.
-This will show actual embeddings, similarity scores, and vector operations.
+RAG Verification Script.
+
+Proves we're doing real RAG with vector similarity search by showing:
+- Actual embeddings stored in database
+- Similarity scores between queries
+- Vector operations in action
+
+This is useful for demonstrating that RAG is working correctly,
+not just passing text to the LLM.
+
+Usage:
+    python devtools/verify_rag.py
 """
 
 import os

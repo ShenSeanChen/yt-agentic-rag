@@ -1,9 +1,13 @@
 # Copyright 2024
-# Directory: yt-rag/main.py
+# Directory: yt-agentic-rag/main.py
 
 """
-Legacy entry point for backward compatibility.
-The main application is now in app/main.py
+Root Entry Point (for uvicorn compatibility).
+
+This file re-exports the FastAPI app from app/main.py.
+It allows running: uvicorn main:app --reload
+
+The actual application code is in app/main.py.
 """
 
 from app.main import app

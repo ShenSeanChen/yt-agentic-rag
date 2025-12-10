@@ -1,5 +1,5 @@
 -- Copyright 2024
--- Directory: yt-rag/sql/init_supabase.sql
+-- Directory: yt-agentic-rag/sql/init_supabase.sql
 -- 
 -- Complete Supabase Database Setup for RAG Application
 -- Run this script on a FRESH Supabase project

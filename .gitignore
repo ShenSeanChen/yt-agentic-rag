@@ -9,6 +9,10 @@ __pycache__/
 # Environment variables
 .env
 
+# Google API credentials (NEVER commit these!)
+credentials/*.json
+credentials/service_account.json
+
 # IDE specific files
 .idea/
 .vscode/

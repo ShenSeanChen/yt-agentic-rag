@@ -1,5 +1,5 @@
 # Copyright 2024
-# Directory: yt-rag/app/core/database.py
+# Directory: yt-agentic-rag/app/config/database.py
 
 """
 Database connection and schema management using Supabase SDK.
@@ -9,7 +9,7 @@ Handles Supabase Postgres with pgvector extension for RAG operations.
 import logging
 from typing import Dict, List, Any, Optional
 from supabase import create_client, Client
-from .config import get_settings
+from .settings import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

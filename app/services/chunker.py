@@ -1,5 +1,5 @@
 # Copyright 2024
-# Directory: yt-rag/app/services/chunker.py
+# Directory: yt-agentic-rag/app/services/chunker.py
 
 """
 Text chunking utilities for RAG document processing.
@@ -9,7 +9,7 @@ Implements simple word-based chunking with overlap for optimal retrieval.
 import logging
 import re
 from typing import List, Dict, Any
-from ..core.config import get_settings
+from ..config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Support - Chat & Knowledge Base</title>
+    <title>Agentic RAG Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,613 +13,636 @@
         }
 
         :root {
-            --primary-color: #4f46e5;
-            --primary-light: #6366f1;
-            --primary-dark: #4338ca;
-            --text-primary: #1f2937;
+            --bg: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-card: #ffffff;
+            --text: #111827;
             --text-secondary: #6b7280;
             --text-muted: #9ca3af;
-            --bg-primary: #f9fafb;
-            --bg-secondary: #ffffff;
-            --border-color: #e5e7eb;
-            --border-light: #f3f4f6;
-            --shadow: 0 4px 20px rgba(0,0,0,0.08);
-            --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+            --border: #e5e7eb;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #059669;
+            --success-bg: #ecfdf5;
+            --error: #dc2626;
+            --error-bg: #fef2f2;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --radius: 8px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #111827;
+                --bg-secondary: #1f2937;
+                --bg-card: #1f2937;
+                --text: #f9fafb;
+                --text-secondary: #9ca3af;
+                --text-muted: #6b7280;
+                --border: #374151;
+                --accent: #3b82f6;
+                --accent-hover: #2563eb;
+                --success: #10b981;
+                --success-bg: #064e3b;
+                --error: #ef4444;
+                --error-bg: #7f1d1d;
+                --shadow: 0 1px 3px rgba(0,0,0,0.3);
+            }
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 25%, #f8fafc 50%, #f1f5f9 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
         }
 
-        .app-container {
-            width: 100%;
-            max-width: 1400px;
-            height: 90vh;
-            background: var(--bg-secondary);
-            border-radius: 24px;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border-light);
+        .app {
             display: grid;
-            grid-template-columns: 1fr 480px;
+            grid-template-columns: 1fr 360px;
+            height: 100vh;
             overflow: hidden;
-            backdrop-filter: blur(10px);
         }
 
-        /* Chat Section */
-        .chat-section {
+        /* ============ CHAT ============ */
+        .chat {
             display: flex;
             flex-direction: column;
-            border-right: 1px solid var(--border-color);
-            min-height: 0; /* Important for flex scrolling */
-            height: 100%; /* Ensure full height */
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            overflow: hidden;
         }
 
         .chat-header {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            padding: 20px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg);
+            flex-shrink: 0;
         }
 
         .chat-header h1 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: var(--text-primary);
-        }
-
-        .chat-header p {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin: 0;
-        }
-
-        .status {
-            padding: 8px 20px;
-            text-align: right;
-            font-size: 12px;
-            font-weight: 400;
-            transition: all 0.3s ease;
-            background: var(--bg-primary);
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .status.connected { 
-            color: #6b7280;
-        }
-        .status.error { 
-            color: #9ca3af;
-        }
-        .status.warning { 
-            color: #9ca3af;
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            background: var(--bg-primary);
-            min-height: 0; /* Important for flex scrolling */
-            max-height: 100%; /* Ensure it doesn't exceed container */
-        }
-
-        .message {
-            margin-bottom: 20px;
-            display: flex;
-            align-items: flex-start;
-            animation: fadeInUp 0.3s ease;
-        }
-
-        .message.user {
-            justify-content: flex-end;
-        }
-
-        .message-content {
-            max-width: 70%;
-            padding: 15px 20px;
-            border-radius: 20px;
-            word-wrap: break-word;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: relative;
-        }
-
-        .message.bot .message-content {
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-            color: var(--text-primary);
-            border-bottom-left-radius: 8px;
-            border: 1px solid #bae6fd;
-        }
-
-        .message.user .message-content {
-            background: var(--text-primary);
-            color: grey;
-            border-bottom-right-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .message-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            margin: 0 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        .message.bot .message-avatar {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-            color: grey;
-            border: 2px solid white;
-        }
-
-        .message.user .message-avatar {
-            background: var(--text-primary);
-            color: grey;
-            border: 2px solid white;
-        }
-
-        .citations {
-            font-size: 12px;
-            margin-top: 10px;
-            opacity: 0.8;
-            font-style: italic;
-            padding: 8px 12px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 10px;
-        }
-
-        .chat-input {
-            padding: 20px;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 10px;
-        }
-
-        .chat-input input {
-            flex: 1;
-            padding: 15px 20px;
-            border: 2px solid var(--border-color);
-            border-radius: 25px;
             font-size: 16px;
-            outline: none;
-            transition: all 0.3s ease;
+            font-weight: 600;
         }
 
-        .chat-input input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .chat-input button {
-            padding: 10px 16px;
-            background: var(--text-primary);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            box-shadow: none;
-            min-width: 60px;
-        }
-
-        .chat-input button:hover {
-            background: var(--primary-color);
-            transform: none;
-        }
-
-        .chat-input button:disabled {
-            background: var(--text-muted);
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .typing-indicator {
-            display: none;
-            padding: 16px 20px;
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-            border-radius: 20px;
-            margin: 10px 0;
-            width: fit-content;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border: 1px solid #bae6fd;
+        .header-right {
+            display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .typing-content {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: var(--success-bg);
+            color: var(--success);
         }
 
-        .typing-dots {
-            display: inline-flex;
+        .status.error {
+            background: var(--error-bg);
+            color: var(--error);
+        }
+
+        .clear-btn {
+            font-size: 13px;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .clear-btn:hover {
+            background: var(--bg-secondary);
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: var(--bg-secondary);
+            min-height: 0;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
             align-items: center;
-            gap: 4px;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            background: var(--accent);
+            color: white;
+        }
+
+        .message.user .avatar {
+            background: var(--text-secondary);
+        }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .message.bot .bubble {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+
+        .message.user .bubble {
+            background: var(--accent);
+            color: white;
+        }
+
+        .bubble a {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        .message.user .bubble a {
+            color: #bfdbfe;
+        }
+
+        .bubble strong {
+            font-weight: 600;
+        }
+
+        .tool-badge {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 4px 8px;
+            background: var(--success-bg);
+            color: var(--success);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .tool-badge.error {
+            background: var(--error-bg);
+            color: var(--error);
+        }
+
+        .sources {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .typing {
+            display: none;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: fit-content;
+            margin-bottom: 20px;
+        }
+
+        .typing.show {
+            display: flex;
+            align-items: center;
         }
 
         .typing-dots span {
             display: inline-block;
             width: 6px;
             height: 6px;
+            margin: 0 2px;
+            background: var(--text-muted);
             border-radius: 50%;
-            background: var(--primary-color);
-            animation: typing 1.4s infinite both;
+            animation: bounce 1.4s infinite;
         }
 
-        .typing-dots span:nth-child(1) { animation-delay: 0s; }
         .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
         .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-        /* Document Editor Section */
-        .editor-section {
+        .chat-input {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            background: var(--bg);
+            flex-shrink: 0;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--bg);
+            color: var(--text);
+            outline: none;
+        }
+
+        .chat-input input:focus {
+            border-color: var(--accent);
+        }
+
+        .chat-input button {
+            padding: 10px 16px;
+            background: var(--text);
+            color: var(--bg);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            opacity: 0.9;
+        }
+
+        .chat-input button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
             display: flex;
             flex-direction: column;
-            background: var(--bg-primary);
-            min-height: 0; /* Important for flex scrolling */
-            height: 100%; /* Ensure full height */
+            background: var(--bg);
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .editor-header {
-            padding: 20px;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
+        .sidebar-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
-        .editor-header h2 {
-            color: var(--text-primary);
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .editor-header p {
-            color: var(--text-secondary);
+        .sidebar-header h2 {
             font-size: 14px;
-            margin: 0;
+            font-weight: 600;
+            margin-bottom: 2px;
         }
 
-        .editor-tabs {
+        .sidebar-header p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .tabs {
             display: flex;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
-        .tab-button {
+        .tab {
             flex: 1;
-            padding: 12px 20px;
+            padding: 10px;
             background: none;
             border: none;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 13px;
+            font-family: inherit;
             color: var(--text-secondary);
-            transition: all 0.2s ease;
+            cursor: pointer;
             border-bottom: 2px solid transparent;
         }
 
-        .tab-button.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-            background: rgba(102, 126, 234, 0.03);
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
         }
 
         .tab-content {
             flex: 1;
-            padding: 20px;
             overflow-y: auto;
-            overflow-x: hidden;
-            min-height: 0; /* Important for flex scrolling */
-            max-height: 100%; /* Ensure it doesn't exceed container */
+            padding: 16px;
+            min-height: 0;
         }
 
-        .document-item {
+        .info-box {
             background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            margin-bottom: 15px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 14px;
+            font-size: 13px;
         }
 
-        .document-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        }
-
-        .document-header {
-            padding: 15px 20px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .document-id {
+        .info-box h3 {
+            font-size: 13px;
             font-weight: 600;
-            color: var(--primary-color);
-            font-size: 14px;
+            margin-bottom: 8px;
         }
 
-        .document-source {
-            font-size: 12px;
+        .info-box p {
             color: var(--text-secondary);
-            font-style: italic;
-        }
-
-        .document-text {
-            padding: 20px;
-        }
-
-        .document-text textarea {
-            width: 100%;
-            min-height: 120px;
-            border: none;
-            outline: none;
-            font-family: inherit;
-            font-size: 14px;
             line-height: 1.5;
-            color: var(--text-primary);
-            background: transparent;
-            resize: vertical;
+            margin-bottom: 6px;
         }
 
-        .save-section {
-            padding: 24px;
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-box ul {
+            margin: 8px 0 0;
+            padding-left: 18px;
+            color: var(--text-secondary);
+        }
+
+        .info-box li {
+            margin: 4px 0;
+        }
+
+        .info-box a {
+            color: var(--accent);
+        }
+
+        .doc-card {
             background: var(--bg-secondary);
-            border-top: 1px solid var(--border-color);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 12px;
+            overflow: hidden;
         }
 
-        .save-button {
+        .doc-header {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .doc-id {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .doc-source {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .doc-body textarea {
             width: 100%;
-            padding: 14px 16px;
-            background: var(--primary-color);
+            min-height: 70px;
+            padding: 10px 12px;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 13px;
+            line-height: 1.4;
+            color: var(--text);
+            resize: vertical;
+            outline: none;
+        }
+
+        .sidebar-footer {
+            padding: 14px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--accent);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: var(--radius);
             font-size: 14px;
-            font-weight: 500;
+            font-family: inherit;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: none;
-            white-space: nowrap;
-            overflow: visible;
-            min-height: 48px;
+        }
+
+        .save-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .save-btn.success {
+            background: var(--success);
+        }
+
+        .setting-row {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            line-height: 1.3;
-            box-sizing: border-box;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .save-button.loading {
-            background: #f59e0b;
-            color: black;
+        .setting-row:last-child {
+            border-bottom: none;
         }
 
-        .save-button.success {
-            background: #10b981;
-            color: grey;
+        .setting-label {
+            color: var(--text-secondary);
         }
 
-        .save-button.error {
-            background: #ef4444;
-            color: black;
+        .setting-value {
+            font-weight: 500;
         }
 
-        .save-button:hover {
-            background: var(--primary-dark);
-            transform: none;
-        }
-
-        .save-button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-
+        /* Notification */
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 12px;
-            color: grey;
-            font-weight: 600;
-            z-index: 1000;
+            top: 16px;
+            right: 16px;
+            padding: 10px 14px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            z-index: 100;
             transform: translateX(400px);
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            box-shadow: var(--shadow);
         }
 
         .notification.show {
             transform: translateX(0);
         }
 
-        .notification.success { background: var(--success-color); }
-        .notification.error { background: var(--error-color); }
-        .notification.info { background: var(--info-color); }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .notification.success {
+            background: var(--success-bg);
+            color: var(--success);
         }
 
-        @keyframes typing {
+        .notification.error {
+            background: var(--error-bg);
+            color: var(--error);
+        }
+
+        @keyframes bounce {
             0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-10px); }
+            30% { transform: translateY(-4px); }
         }
 
-        /* Responsive Design */
-        @media (max-width: 1200px) {
-            .app-container {
+        @media (max-width: 900px) {
+            .app {
                 grid-template-columns: 1fr;
-                grid-template-rows: 1fr auto;
-                height: 95vh;
             }
-            
-            .editor-section {
-                max-height: 400px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            
-            .app-container {
-                border-radius: 10px;
-                height: 95vh;
-            }
-            
-            .message-content {
-                max-width: 85%;
-            }
-            
-            .chat-header h1 {
-                font-size: 20px;
-            }
-            
-            .editor-header h2 {
-                font-size: 16px;
+            .sidebar {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Chat Section -->
-        <div class="chat-section">
+    <div class="app">
+        <div class="chat">
             <div class="chat-header">
-                <h1>Customer Support</h1>
-                <p>Chat with our AI assistant for help with orders, returns, and policies</p>
+                <h1>Agentic RAG Assistant</h1>
+                <div class="header-right">
+                    <span class="status" id="status">Ready</span>
+                    <button class="clear-btn" onclick="clearChat()">Clear</button>
+                </div>
             </div>
             
-            <div class="status" id="status">Checking connection...</div>
-            
-            <div class="chat-messages" id="messages">
+            <div class="messages" id="messages">
                 <div class="message bot">
-                    <div class="message-avatar">✨</div>
-                    <div class="message-content">
-                        Welcome to the AI Assistant! 👋
+                    <div class="avatar">A</div>
+                    <div class="bubble">
+                        <strong>Welcome!</strong> I can answer questions and take actions like scheduling meetings or sending emails.
                         <br><br>
-                        I can help you with:
-                        • Questions about policies and services
-                        • Return and shipping information
-                        • Customer support inquiries
-                        <br><br>
-                        You can also edit the knowledge base documents on the right panel and update the vector database in real-time!
+                        <span style="color: var(--text-muted)">Try: "Schedule a consultation with john@example.com for tomorrow at 2pm"</span>
                     </div>
                 </div>
             </div>
             
-            <div class="typing-indicator" id="typing">
-                <div class="message-avatar">💭</div>
-                <div class="typing-content">
-                    <span style="color: var(--text-secondary); font-size: 14px; margin-right: 8px;">Thinking</span>
-                    <div class="typing-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
+            <div class="typing" id="typing">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
             </div>
             
             <div class="chat-input">
-                <input type="text" id="messageInput" placeholder="Ask me anything about our policies..." maxlength="500">
+                <input type="text" id="messageInput" placeholder="Type your message..." maxlength="500">
                 <button onclick="sendMessage()" id="sendBtn">Send</button>
             </div>
         </div>
 
-        <!-- Document Editor Section -->
-        <div class="editor-section">
-            <div class="editor-header">
-                <div>
-                    <h2>📋 Knowledge Base Editor</h2>
-                    <p>Edit documents and update the vector database</p>
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Knowledge Base</h2>
+                <p>Documents the AI uses to answer questions</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('docs')">Documents</button>
+                <button class="tab" onclick="switchTab('about')">About</button>
+                <button class="tab" onclick="switchTab('settings')">Settings</button>
+            </div>
+
+            <div class="tab-content" id="docsTab">
+                <div class="info-box">
+                    <h3>What is this?</h3>
+                    <p>These documents form the AI's knowledge base. When you ask a question, the AI searches these to find relevant information.</p>
+                    <ul>
+                        <li>Edit text to update knowledge</li>
+                        <li>Click Save to update the database</li>
+                    </ul>
                 </div>
+                <div id="documentsContainer"></div>
             </div>
 
-            <div class="editor-tabs">
-                <button class="tab-button active" onclick="switchTab('documents')">Documents</button>
-                <button class="tab-button" onclick="switchTab('settings')">Settings</button>
-            </div>
+            <div class="tab-content" id="aboutTab" style="display: none;">
+                <div class="info-box">
+                    <h3>Agentic RAG</h3>
+                    <p>This combines RAG (Retrieval-Augmented Generation) with Tool Calling to create an AI that can both answer questions AND take actions.</p>
+                </div>
+                
+                <div class="info-box">
+                    <h3>How It Works</h3>
+                    <p><strong>1.</strong> Retrieve relevant context from knowledge base</p>
+                    <p><strong>2.</strong> Decide if tools are needed</p>
+                    <p><strong>3.</strong> Execute tools (calendar, email)</p>
+                    <p><strong>4.</strong> Generate response with citations</p>
+                </div>
 
-            <div class="tab-content" id="documentsTab">
-                <div id="documentsContainer">
-                    <!-- Documents will be loaded here -->
+                <div class="info-box">
+                    <h3>Setup Guide</h3>
+                    <p>To run this yourself:</p>
+                    <ul>
+                        <li><a href="https://supabase.com" target="_blank">Supabase</a> - Vector database</li>
+                        <li><a href="https://platform.openai.com" target="_blank">OpenAI</a> - LLM & embeddings</li>
+                        <li><a href="https://console.cloud.google.com" target="_blank">Google Cloud</a> - Calendar & Gmail</li>
+                    </ul>
+                    <p style="margin-top: 10px;">See the <a href="https://github.com/ShenSeanChen/yt-agentic-rag" target="_blank">README</a> for full instructions.</p>
                 </div>
             </div>
 
             <div class="tab-content" id="settingsTab" style="display: none;">
-                <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
-                    <h3>⚙️ Settings</h3>
-                    <p>Advanced settings and configurations coming soon!</p>
-                    <br>
-                    <div style="background: var(--bg-secondary); padding: 20px; border-radius: 12px; text-align: left;">
-                        <h4 style="margin-bottom: 10px;">Current Configuration:</h4>
-                        <p><strong>API Endpoint:</strong> http://localhost:8000</p>
-                        <p><strong>Embedding Model:</strong> text-embedding-3-small</p>
-                        <p><strong>Chat Model:</strong> gpt-4o</p>
-                        <p><strong>Top-K Results:</strong> 6</p>
+                <div class="info-box">
+                    <h3>Configuration</h3>
+                    <div class="setting-row">
+                        <span class="setting-label">Embedding Model</span>
+                        <span class="setting-value">text-embedding-3-small</span>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">Chat Model</span>
+                        <span class="setting-value">gpt-4o</span>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">Vector DB</span>
+                        <span class="setting-value">Supabase pgvector</span>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h3>Tools</h3>
+                    <div class="setting-row">
+                        <span class="setting-label">Calendar</span>
+                        <span class="setting-value" style="color: var(--success)">Active</span>
+                    </div>
+                    <div class="setting-row">
+                        <span class="setting-label">Email</span>
+                        <span class="setting-value" style="color: var(--success)">Active</span>
                     </div>
                 </div>
             </div>
 
-            <div class="save-section">
-                <button class="save-button" id="saveBtn" onclick="saveDocuments()">
-                    <span id="saveText">💾 Save</span>
-                </button>
+            <div class="sidebar-footer">
+                <button class="save-btn" id="saveBtn" onclick="saveDocuments()">Save to Database</button>
             </div>
         </div>
     </div>
 
-    <!-- Notification -->
     <div class="notification" id="notification"></div>
 
     <script>
-        // Automatically detect the correct API base URL
         const API_BASE_URL = window.location.origin;
         const messagesContainer = document.getElementById('messages');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const typingIndicator = document.getElementById('typing');
-        const statusDiv = document.getElementById('status');
+        const statusEl = document.getElementById('status');
         const documentsContainer = document.getElementById('documentsContainer');
         const saveBtn = document.getElementById('saveBtn');
         const notification = document.getElementById('notification');
 
         let documents = [];
-        let currentTab = 'documents';
+        let chatHistory = [];
 
-        // Initialize the application
         init();
 
         async function init() {
@@ -627,237 +651,180 @@
             messageInput.focus();
         }
 
-        // Send message on Enter key
-        messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
         });
+
+        function clearChat() {
+            chatHistory = [];
+            messagesContainer.innerHTML = `
+                <div class="message bot">
+                    <div class="avatar">A</div>
+                    <div class="bubble">Chat cleared. How can I help?</div>
+                </div>
+            `;
+        }
 
         async function checkHealth() {
             try {
-                const response = await fetch(`${API_BASE_URL}/healthz`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.database_connected) {
-                        statusDiv.textContent = 'System ready';
-                        statusDiv.className = 'status connected';
-                    } else {
-                        statusDiv.textContent = 'Database connection issues';
-                        statusDiv.className = 'status warning';
-                    }
-                } else {
-                    throw new Error('Server not responding');
+                const res = await fetch(`${API_BASE_URL}/healthz`);
+                if (res.ok) {
+                    const data = await res.json();
+                    statusEl.textContent = data.database_connected ? 'Ready' : 'DB Issue';
+                    statusEl.className = data.database_connected ? 'status' : 'status error';
                 }
-            } catch (error) {
-                statusDiv.textContent = 'Connection unavailable';
-                statusDiv.className = 'status error';
+            } catch {
+                statusEl.textContent = 'Offline';
+                statusEl.className = 'status error';
             }
         }
 
         async function loadDocuments() {
             try {
-                // Fetch documents from the API
-                const response = await fetch(`${API_BASE_URL}/documents`);
-                if (response.ok) {
-                    const data = await response.json();
+                const res = await fetch(`${API_BASE_URL}/documents`);
+                if (res.ok) {
+                    const data = await res.json();
                     documents = data.documents || [];
-                    console.log(`✅ Loaded ${documents.length} documents from API`);
-                } else {
-                    console.warn('Failed to fetch documents from API, using fallback');
-                    // Fallback to empty array - user can add documents manually
-                    documents = [];
                 }
-            } catch (error) {
-                console.error('Error loading documents:', error);
-                // Fallback to empty array
-                documents = [];
-            }
-
+            } catch { documents = []; }
             renderDocuments();
         }
 
         function renderDocuments() {
-            documentsContainer.innerHTML = '';
-            
-            documents.forEach((doc, index) => {
-                const docElement = document.createElement('div');
-                docElement.className = 'document-item';
-                docElement.innerHTML = `
-                    <div class="document-header">
-                        <div>
-                            <div class="document-id">${doc.chunk_id}</div>
-                            <div class="document-source">${doc.source}</div>
-                        </div>
+            documentsContainer.innerHTML = documents.map((doc, i) => `
+                <div class="doc-card">
+                    <div class="doc-header">
+                        <div class="doc-id">${doc.chunk_id}</div>
+                        <div class="doc-source">${doc.source}</div>
                     </div>
-                    <div class="document-text">
-                        <textarea 
-                            id="doc-${index}" 
-                            placeholder="Enter document content..."
-                            oninput="updateDocument(${index}, this.value)"
-                        >${doc.text}</textarea>
+                    <div class="doc-body">
+                        <textarea oninput="documents[${i}].text = this.value">${doc.text}</textarea>
                     </div>
-                `;
-                documentsContainer.appendChild(docElement);
-            });
+                </div>
+            `).join('');
         }
 
-        function updateDocument(index, text) {
-            documents[index].text = text;
-        }
-
-        function switchTab(tabName) {
-            currentTab = tabName;
-            
-            // Update tab buttons
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`button[onclick="switchTab('${tabName}')"]`).classList.add('active');
-            
-            // Show/hide tab content
-            document.getElementById('documentsTab').style.display = tabName === 'documents' ? 'block' : 'none';
-            document.getElementById('settingsTab').style.display = tabName === 'settings' ? 'block' : 'none';
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('docsTab').style.display = tab === 'docs' ? 'block' : 'none';
+            document.getElementById('aboutTab').style.display = tab === 'about' ? 'block' : 'none';
+            document.getElementById('settingsTab').style.display = tab === 'settings' ? 'block' : 'none';
         }
 
         async function saveDocuments() {
-            const saveText = document.getElementById('saveText');
-            const originalText = saveText.innerHTML;
-            
             saveBtn.disabled = true;
-            saveBtn.classList.add('loading');
-            saveBtn.classList.remove('success', 'error');
-            saveText.innerHTML = '🔄 Saving...';
-
+            saveBtn.textContent = 'Saving...';
             try {
-                const response = await fetch(`${API_BASE_URL}/seed`, {
+                const res = await fetch(`${API_BASE_URL}/seed`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        docs: documents
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ docs: documents })
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    showNotification(`✅ Successfully updated ${data.inserted} documents in database!`, 'success');
-                    saveBtn.classList.remove('loading');
+                if (res.ok) {
+                    const data = await res.json();
+                    showNotification(`Updated ${data.inserted} documents`, 'success');
                     saveBtn.classList.add('success');
-                    saveText.innerHTML = '✅ Saved!';
-                    
+                    saveBtn.textContent = 'Saved!';
                     setTimeout(() => {
-                        saveText.innerHTML = originalText;
+                        saveBtn.textContent = 'Save to Database';
                         saveBtn.classList.remove('success');
                     }, 2000);
-                } else {
-                    throw new Error('Failed to save documents');
-                }
-            } catch (error) {
-                showNotification('❌ Failed to update database. Please try again.', 'error');
-                saveBtn.classList.remove('loading');
-                saveBtn.classList.add('error');
-                saveText.innerHTML = '❌ Failed';
-                
-                setTimeout(() => {
-                    saveText.innerHTML = originalText;
-                    saveBtn.classList.remove('error');
-                }, 2000);
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.classList.remove('loading');
+                } else throw new Error();
+            } catch {
+                showNotification('Failed to save', 'error');
+                saveBtn.textContent = 'Save to Database';
             }
+            saveBtn.disabled = false;
         }
 
-        function showNotification(message, type = 'info') {
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 4000);
+        function showNotification(msg, type) {
+            notification.textContent = msg;
+            notification.className = `notification ${type} show`;
+            setTimeout(() => notification.classList.remove('show'), 3000);
         }
 
-        function addMessage(content, isUser = false, citations = []) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
-            
-            const avatar = document.createElement('div');
-            avatar.className = 'message-avatar';
-            avatar.textContent = isUser ? '👤' : '✨';
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.innerHTML = content.replace(/\n/g, '<br>');
-            
-            if (citations.length > 0) {
-                const citationsDiv = document.createElement('div');
-                citationsDiv.className = 'citations';
-                citationsDiv.innerHTML = `📚 Sources: ${citations.join(', ')}`;
-                contentDiv.appendChild(citationsDiv);
+        function formatMessage(text, toolCalls = [], toolResults = []) {
+            let html = text
+                .replace(/\[[\w_#]+\]/g, '')
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+                .replace(/(?<!href="|">)(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>')
+                .replace(/\n/g, '<br>');
+
+            if (toolCalls.length > 0) {
+                html += toolCalls.map(tc => {
+                    const result = toolResults.find(tr => tr.call_id === tc.call_id);
+                    const ok = result?.success;
+                    return `<div class="tool-badge${ok ? '' : ' error'}">${ok ? '✓' : '✗'} ${tc.tool_name.replace(/_/g, ' ')}</div>`;
+                }).join('');
             }
+            return html;
+        }
+
+        function addMessage(content, isUser, citations = [], toolCalls = [], toolResults = []) {
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user' : 'bot'}`;
             
-            if (isUser) {
-                messageDiv.appendChild(contentDiv);
-                messageDiv.appendChild(avatar);
-            } else {
-                messageDiv.appendChild(avatar);
-                messageDiv.appendChild(contentDiv);
-            }
+            const formatted = isUser ? content : formatMessage(content, toolCalls, toolResults);
+            const sources = (!isUser && citations.length) 
+                ? `<div class="sources">Sources: ${[...new Set(citations.map(c => c.replace(/#\d+$/, '')))].join(', ')}</div>` 
+                : '';
             
-            messagesContainer.appendChild(messageDiv);
+            div.innerHTML = `
+                <div class="avatar">${isUser ? 'U' : 'A'}</div>
+                <div class="bubble">${formatted}${sources}</div>
+            `;
+            messagesContainer.appendChild(div);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
         function showTyping() {
-            typingIndicator.style.display = 'flex';
+            typingIndicator.classList.add('show');
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
         function hideTyping() {
-            typingIndicator.style.display = 'none';
+            typingIndicator.classList.remove('show');
         }
 
         async function sendMessage() {
-            const message = messageInput.value.trim();
-            if (!message) return;
+            const msg = messageInput.value.trim();
+            if (!msg) return;
 
-            // Add user message
-            addMessage(message, true);
+            addMessage(msg, true);
+            chatHistory.push({ role: 'user', content: msg });
             messageInput.value = '';
             sendBtn.disabled = true;
             showTyping();
 
             try {
-                const response = await fetch(`${API_BASE_URL}/answer`, {
+                const res = await fetch(`${API_BASE_URL}/agent`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        query: message,
+                        query: msg,
+                        chat_history: chatHistory.slice(0, -1),
                         top_k: 6
                     })
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    hideTyping();
-                    addMessage(data.text, false, data.citations || []);
-                } else {
-                    hideTyping();
-                    addMessage('Sorry, I encountered an error processing your question. Please try again later. 🔧', false);
-                }
-            } catch (error) {
                 hideTyping();
-                addMessage('Sorry, I cannot connect to the server. Please make sure it\'s running and try again. 🔌', false);
-            } finally {
-                sendBtn.disabled = false;
-                messageInput.focus();
+                if (res.ok) {
+                    const data = await res.json();
+                    chatHistory.push({ role: 'assistant', content: data.text });
+                    addMessage(data.text, false, data.citations || [], data.tool_calls || [], data.tool_results || []);
+                } else {
+                    chatHistory.pop();
+                    addMessage('Something went wrong. Please try again.', false);
+                }
+            } catch {
+                hideTyping();
+                chatHistory.pop();
+                addMessage('Cannot connect to server.', false);
             }
+            sendBtn.disabled = false;
+            messageInput.focus();
         }
     </script>
 </body>

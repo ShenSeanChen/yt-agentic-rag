@@ -1,336 +1,529 @@
-# RAG AI Agent Backend
+# 🤖 Agentic RAG AI Backend
 
-A minimal, production-ready FastAPI backend demonstrating **Retrieval-Augmented Generation (RAG)** with vector similarity search. Built for educational purposes and easy frontend integration.
+A production-ready FastAPI backend demonstrating **Agentic RAG** - combining Retrieval-Augmented Generation with autonomous tool-calling capabilities.
 
-📹 Full YouTube Guide: [Youtube link](https://www.youtube.com/watch?v=ZREt9MAozho&list=PLE9hy4A7ZTmpGq7GHf5tgGFWh2277AeDR&index=24)
+> **🎬 This is an extension of [yt-rag](https://github.com/ShenSeanChen/yt-rag)** - If you're new here, check out the original RAG tutorial first!
 
-🚀 X Post: [X link](https://x.com/ShenSeanChen/status/1964074873296388546)
+📹 **YouTube Tutorial**: [Coming Soon]
 
-💡 Try the RAG AI Agent: [App link](https://yt-rag-431569812034.us-east1.run.app/chat)
+🚀 **Live Demo**: [App Link](https://yt-agentic-rag.vercel.app/chat)
 
-☕️ Buy me a coffee: [Cafe Latte](https://buy.stripe.com/5kA176bA895ggog4gh)
+☕️ **Support**: [Buy me a coffee](https://buy.stripe.com/5kA176bA895ggog4gh)
 
-🤖️ Discord: [Invite link](https://discord.com/invite/TKKPzZheua)
+🤖 **Discord**: [Join our community](https://discord.com/invite/TKKPzZheua)
 
-## 🎯 Features
+---
 
-- **FastAPI** backend with automatic API documentation
-- **Supabase** integration with pgvector for vector similarity search
-- **Multi-AI Provider** support (OpenAI & Anthropic)
-- **Vector embeddings** with semantic search
-- **Citation-based answers** with source tracking
-- **Frontend-ready** architecture for NextJS integration
-- **Docker** containerization for easy deployment
+## 🆕 What's New in Agentic RAG?
 
-## 🏗️ Architecture
+| Feature | yt-rag (v1) | yt-agentic-rag (v2) |
+|---------|-------------|---------------------|
+| Vector Search | ✅ | ✅ |
+| RAG Q&A | ✅ | ✅ |
+| **Tool Calling** | ❌ | ✅ |
+| **Agent Reasoning Loop** | ❌ | ✅ |
+| **Calendar Scheduling** | ❌ | ✅ |
+| **Email Sending** | ❌ | ✅ |
+| **Multi-turn Chat History** | ❌ | ✅ |
+| **Multi-step Actions** | ❌ | ✅ |
+
+### The Key Difference
+
+**Traditional RAG**: `Query → Retrieve → Answer`
+
+**Agentic RAG**: `Query → Retrieve → Reason → Decide → Act → Answer`
+
+The agent can now:
+1. **Retrieve** relevant context from your knowledge base
+2. **Reason** about whether the context is relevant to the action
+3. **Decide** if tools need to be called
+4. **Act** by executing tools (schedule meetings, send emails)
+5. **Answer** with citations and confirmation of actions taken
+
+---
+
+## 📁 Project Structure
 
 ```
-yt-rag/
-├── app/
-│   ├── core/           # Infrastructure (config, database)
-│   ├── models/         # Pydantic data models
-│   ├── services/       # Business logic (RAG, embeddings)
-│   └── main.py         # FastAPI application
-├── sql/
-│   └── init_supabase.sql  # Database initialization script
-└── requirements.txt
+yt-agentic-rag/
+│
+├── 📂 app/                              # 🚀 PRODUCTION APPLICATION
+│   │
+│   ├── 📂 agents/                       # 🤖 AI AGENTS (the star of the show!)
+│   │   ├── __init__.py                  # Exports agent_service
+│   │   ├── orchestrator.py              # Main agent reasoning loop
+│   │   └── 📂 tools/                    # Agent capabilities
+│   │       ├── __init__.py              # Exports tool_registry
+│   │       ├── base.py                  # Abstract base class for tools
+│   │       ├── registry.py              # Tool registration & execution
+│   │       ├── calendar_tool.py         # Google Calendar integration
+│   │       └── email_tool.py            # Gmail integration
+│   │
+│   ├── 📂 services/                     # 📦 Core business logic
+│   │   ├── __init__.py
+│   │   ├── rag.py                       # RAG pipeline (retrieve → augment → generate)
+│   │   ├── embedding.py                 # Vector embedding service
+│   │   ├── chat.py                      # LLM chat completion service
+│   │   └── chunker.py                   # Text chunking utilities
+│   │
+│   ├── 📂 schemas/                      # 📋 API request/response definitions
+│   │   ├── __init__.py
+│   │   ├── requests.py                  # Input validation (AgentRequest, etc.)
+│   │   ├── responses.py                 # Output formats (AgentResponse, etc.)
+│   │   ├── entities.py                  # Database entity models
+│   │   └── tool_schemas.py              # LLM function-calling definitions
+│   │
+│   ├── 📂 config/                       # ⚙️ Configuration & infrastructure
+│   │   ├── __init__.py
+│   │   ├── settings.py                  # Environment variable management
+│   │   └── database.py                  # Supabase connection & operations
+│   │
+│   ├── 📂 data/                         # 📚 Static data
+│   │   ├── __init__.py
+│   │   └── default_documents.py         # Sample documents for RAG
+│   │
+│   └── main.py                          # FastAPI app & route definitions
+│
+├── 📂 devtools/                         # 🛠️ Development & debugging utilities
+│   ├── README.md                        # How to use these tools
+│   ├── test_setup.py                    # Verify your setup works
+│   ├── verify_rag.py                    # Prove RAG is working
+│   ├── check_dimensions.py              # Debug embedding dimensions
+│   └── chatbot.py                       # Terminal chat client
+│
+├── 📂 credentials/                      # 🔐 Google service account (gitignored)
+│   └── service_account.json             # Your GCP service account key
+│
+├── 📂 sql/                              # 🗄️ Database setup
+│   └── init_supabase.sql                # Supabase schema & pgvector setup
+│
+├── 📂 static/                           # 🎨 Frontend assets
+│   └── chat.html                        # Web chat interface
+│
+├── main.py                              # Root entry point (re-exports app/main.py)
+├── requirements.txt                     # Python dependencies
+├── Dockerfile                           # Container configuration
+├── .env.example                         # Environment variable template
+├── DEPLOYMENT.md                        # Cloud Run deployment guide
+└── README.md                            # This file
 ```
 
-## 🚀 Quick Start Guide
+---
 
-**Complete setup from clone to asking questions in ~10 minutes**
+## 🚀 Complete Setup Guide (From Scratch)
 
 ### Prerequisites
 
-- Python 3.11+
-- Supabase account
-- OpenAI API key
-- Anthropic API key (optional, for Claude)
+- **Python 3.11+** - [Download](https://www.python.org/downloads/)
+- **Git** - [Download](https://git-scm.com/downloads)
+- **Supabase Account** - [Sign up free](https://supabase.com)
+- **OpenAI API Key** - [Get key](https://platform.openai.com/api-keys)
+- **Google Cloud Account** (for calendar/email tools) - [Console](https://console.cloud.google.com)
 
-### Step 1: Clone and Install Dependencies
+---
+
+### Step 1: Clone and Install
 
 ```bash
 # Clone the repository
-git clone https://github.com/ShenSeanChen/yt-rag.git
-cd yt-rag
+git clone https://github.com/ShenSeanChen/yt-agentic-rag.git
+cd yt-agentic-rag
 
 # Create virtual environment
-python3.11 -m venv venv_yt_rag
-source venv_yt_rag/bin/activate  # On Windows: venv_yt_rag\Scripts\activate
+python3.11 -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate  # macOS/Linux
+# OR
+venv\Scripts\activate     # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### Step 2: Get API Keys (5 minutes)
+---
 
-**Supabase Setup:**
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Wait for project to be ready (~2 minutes)
-3. Go to **Settings** → **API** and copy:
+### Step 2: Set Up Supabase (Vector Database)
+
+#### 2.1 Create a Supabase Project
+
+1. Go to [supabase.com](https://supabase.com) and sign in
+2. Click **"New Project"**
+3. Choose a name (e.g., `agentic-rag`)
+4. Set a secure database password (save this!)
+5. Select a region close to you
+6. Click **"Create new project"** and wait for setup
+
+#### 2.2 Get Your API Keys
+
+1. In your project, go to **Settings** → **API**
+2. Copy these values:
    - **Project URL** (e.g., `https://abc123.supabase.co`)
-   - **Anon public key** (starts with `eyJ...`)
-   - **Service role secret key** (starts with `eyJ...`)
+   - **anon public key** (starts with `eyJ...`)
+   - **service_role key** (starts with `eyJ...`) - ⚠️ Keep this secret!
 
-**OpenAI Setup:**
-1. Go to [platform.openai.com](https://platform.openai.com)
-2. Create account/sign in → **API Keys** → Create new key
+#### 2.3 Initialize the Database Schema
+
+1. In Supabase, go to **SQL Editor**
+2. Click **"New Query"**
+3. Copy the contents of `sql/init_supabase.sql` and paste it
+4. Click **"Run"** to execute
+
+This creates:
+- `rag_chunks` table for storing document embeddings
+- `match_chunks` function for vector similarity search
+- Required indexes for performance
+
+---
+
+### Step 3: Set Up OpenAI
+
+1. Go to [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+2. Click **"Create new secret key"**
 3. Copy the key (starts with `sk-...`)
 
-If you meet issues accessing overseas services due to the lack of a Visa or Mastercard, please check out [the alternative version](https://github.com/ZhaoYi-10-13/Gary-Agent-RAG) of this repository. That version uses Chinese APIs to ensure the project runs smoothly (Supabase is still required, but the free tier fully covers this project).
+---
 
-### Step 3: Configure Environment
+### Step 4: Set Up Google Cloud (For Calendar & Email Tools)
+
+> ⚠️ **Skip this step** if you only want RAG without tool calling.
+
+#### 4.1 Create a Google Cloud Project
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Click the project dropdown → **"New Project"**
+3. Name it (e.g., `agentic-rag-tools`)
+4. Click **"Create"**
+
+#### 4.2 Enable APIs
+
+1. Go to **APIs & Services** → **Library**
+2. Search and enable:
+   - **Google Calendar API**
+   - **Gmail API**
+
+#### 4.3 Create a Service Account
+
+1. Go to **IAM & Admin** → **Service Accounts**
+2. Click **"Create Service Account"**
+3. Name: `agentic-rag-service`
+4. Click **"Create and Continue"**
+5. Skip the optional steps, click **"Done"**
+
+#### 4.4 Generate a Key
+
+1. Click on your new service account
+2. Go to **Keys** tab
+3. Click **"Add Key"** → **"Create new key"**
+4. Choose **JSON**
+5. Click **"Create"** - a file downloads
+6. **Move this file** to `credentials/service_account.json` in your project
+
+#### 4.5 Enable Domain-Wide Delegation (Google Workspace)
+
+> Required if using a Google Workspace account (e.g., `@yourcompany.com`)
+
+1. In the service account details, click **"Show Advanced Settings"**
+2. Copy the **Client ID** (a long number)
+3. Go to [admin.google.com](https://admin.google.com) (Google Workspace Admin)
+4. Navigate to **Security** → **API Controls** → **Domain-wide Delegation**
+5. Click **"Add new"**
+6. Paste the Client ID
+7. Add these OAuth scopes:
+   ```
+   https://www.googleapis.com/auth/calendar
+   https://www.googleapis.com/auth/gmail.send
+   ```
+8. Click **"Authorize"**
+
+---
+
+### Step 5: Configure Environment Variables
 
 ```bash
-# Copy environment template
+# Copy the template
 cp .env.example .env
 
-# Edit with your real API keys
+# Edit with your values
 nano .env  # or use your preferred editor
 ```
 
-**Update `.env` with your values:**
-```env
-# Supabase Configuration
-SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_ANON_KEY=your_anon_key_here
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+**Fill in your `.env` file:**
 
-# OpenAI Configuration (using latest models)
-OPENAI_API_KEY=sk-your_openai_key_here
-OPENAI_EMBED_MODEL=text-embedding-3-large
+```env
+# ===========================================
+# SUPABASE CONFIGURATION (Required)
+# ===========================================
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# ===========================================
+# OPENAI CONFIGURATION (Required)
+# ===========================================
+OPENAI_API_KEY=sk-your-openai-api-key
+OPENAI_EMBED_MODEL=text-embedding-3-small
 OPENAI_CHAT_MODEL=gpt-4o
 
-# AI Provider
+# ===========================================
+# AI PROVIDER SETTINGS
+# ===========================================
 AI_PROVIDER=openai
 
-# Optional: Anthropic
-ANTHROPIC_API_KEY=your_anthropic_key_here
-ANTHROPIC_CHAT_MODEL=claude-3-5-sonnet-20241022
+# ===========================================
+# GOOGLE API CONFIGURATION (For Tools - Optional)
+# ===========================================
+GOOGLE_SERVICE_ACCOUNT_PATH=credentials/service_account.json
+GOOGLE_CALENDAR_EMAIL=your-email@yourcompany.com
+GOOGLE_CALENDAR_ID=primary
+
+# ===========================================
+# APPLICATION SETTINGS
+# ===========================================
+ENVIRONMENT=development
+LOG_LEVEL=INFO
 ```
 
-### Step 4: Initialize Database (2 minutes)
+---
 
-1. **Open Supabase Dashboard** → **SQL Editor**
-2. **Click "New query"**
-3. **Copy entire contents** of `sql/init_supabase.sql`
-4. **Paste and click "Run"**
-
-✅ This creates everything needed:
-- pgvector extension
-- `rag_chunks` table with VECTOR(3072) for latest embeddings
-- Performance indexes
-- Vector search functions
-- RLS policies for future auth
-
-### Step 5: Test Setup (Optional)
+### Step 6: Verify Setup
 
 ```bash
-# Test your complete setup
-python test_setup.py
+# Run the setup verification script
+python devtools/test_setup.py
 ```
 
-This verifies:
-- ✅ Dependencies installed
-- ✅ API keys configured
-- ✅ Database connected
-- ✅ Schema initialized
-- ✅ RAG pipeline working
+You should see:
+```
+✅ All modules imported successfully
+✅ Environment variables configured
+✅ Database connection successful
+✅ Database schema validated
+✅ Successfully seeded X document chunks
+✅ RAG query successful!
+🎉 ALL TESTS PASSED!
+```
 
-### Step 6: Start the Server
+---
+
+### Step 7: Start the Server
 
 ```bash
 uvicorn main:app --reload --port 8000
 ```
 
-The API will be available at:
-- **API**: http://localhost:8000
-- **Interactive Docs**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+Visit:
+- **API Docs**: http://localhost:8000/docs
+- **Chat UI**: http://localhost:8000/chat
+- **Health Check**: http://localhost:8000/healthz
 
-## 📚 API Usage
+---
 
-### Health Check
+## 📚 API Endpoints
+
+### Health & Info
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/healthz` | GET | Health check with database status |
+| `/tools` | GET | List available agent tools |
+| `/documents` | GET | List documents in knowledge base |
+
+### RAG (Question Answering)
+
 ```bash
-curl http://localhost:8000/healthz
-```
-
-### Seed Knowledge Base
-```bash
-# Seed with default documents
-curl -X POST http://localhost:8000/seed
-
-# Or seed with custom documents
-curl -X POST http://localhost:8000/seed \
-  -H "Content-Type: application/json" \
-  -d '{
-    "docs": [
-      {
-        "chunk_id": "policy_returns_v1#window",
-        "source": "https://help.example.com/returns",
-        "text": "You can return unworn items within 30 days of purchase..."
-      }
-    ]
-  }'
-```
-
-### Ask Questions (RAG)
-```bash
+# Traditional RAG - Answer questions from knowledge base
 curl -X POST http://localhost:8000/answer \
   -H "Content-Type: application/json" \
+  -d '{"query": "What is your return policy?", "top_k": 6}'
+```
+
+### 🆕 Agent (RAG + Tool Calling)
+
+```bash
+# Agentic RAG - Can answer questions AND take actions
+curl -X POST http://localhost:8000/agent \
+  -H "Content-Type: application/json" \
   -d '{
-    "query": "Can I return shoes after 30 days?",
+    "query": "Schedule a consultation call with john@example.com for tomorrow at 2pm",
     "top_k": 6
   }'
 ```
 
-**Example Response:**
-```json
-{
-  "text": "Based on our return policy, you can return unworn shoes within 30 days of purchase [policy_returns_v1#window]. Items must be in original condition...",
-  "citations": ["policy_returns_v1#window", "policy_returns_v1#conditions"],
-  "debug": {
-    "top_doc_ids": ["policy_returns_v1#window", "policy_returns_v1#conditions"],
-    "latency_ms": 1250
-  }
-}
+### 🆕 Multi-turn Conversations (Chat History)
+
+```bash
+# Include chat history for context-aware conversations
+curl -X POST http://localhost:8000/agent \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Make it 30 minutes",
+    "chat_history": [
+      {"role": "user", "content": "Schedule a call with john@example.com tomorrow at 2pm"},
+      {"role": "assistant", "content": "I can schedule that. How long should the meeting be?"}
+    ],
+    "top_k": 6
+  }'
 ```
 
-## 🔧 Configuration Options
+---
 
-### AI Providers
+## 🔧 Adding New Tools
 
-**OpenAI (Recommended)**
-```env
-AI_PROVIDER=openai
-OPENAI_API_KEY=your_key
-OPENAI_EMBED_MODEL=text-embedding-3-small  # 1536 dimensions
-OPENAI_CHAT_MODEL=gpt-4o-mini
+The architecture makes it easy to add new agent capabilities:
+
+### 1. Create the Tool (`app/agents/tools/my_tool.py`)
+
+```python
+# Directory: yt-agentic-rag/app/agents/tools/my_tool.py
+
+from typing import Dict, Any
+from .base import BaseTool
+
+class MyTool(BaseTool):
+    """Description of what this tool does."""
+    
+    @property
+    def name(self) -> str:
+        return "my_tool_name"
+    
+    @property
+    def description(self) -> str:
+        return "A clear description for the LLM"
+    
+    async def execute(self, param1: str, param2: int = 10, **kwargs) -> Dict[str, Any]:
+        """Execute the tool with given parameters."""
+        # Your implementation here
+        result = do_something(param1, param2)
+        return self._success_response({"result": result})
+
+# Export singleton instance
+my_tool = MyTool()
 ```
 
-**Anthropic Claude**
-```env
-AI_PROVIDER=anthropic
-ANTHROPIC_API_KEY=your_key
-ANTHROPIC_CHAT_MODEL=claude-3-haiku-20240307
+### 2. Register in Registry (`app/agents/tools/registry.py`)
 
-# Note: Still need OpenAI key for embeddings
-OPENAI_API_KEY=your_openai_key
+```python
+from .my_tool import my_tool
+
+class ToolRegistry:
+    def _register_default_tools(self):
+        self.register(calendar_tool)
+        self.register(email_tool)
+        self.register(my_tool)  # Add your tool here
 ```
 
-### RAG Parameters
+### 3. Add Tool Schema (`app/schemas/tool_schemas.py`)
 
-Adjust in `app/core/config.py`:
-- `chunk_size`: Token limit per chunk (default: 400)
-- `chunk_overlap`: Overlap between chunks (default: 60 tokens)
-- `default_top_k`: Number of chunks to retrieve (default: 6)
-- `temperature`: LLM creativity (default: 0.1)
+```python
+TOOL_DEFINITIONS.append({
+    "type": "function",
+    "function": {
+        "name": "my_tool_name",
+        "description": "A clear description for the LLM to understand when to use this tool",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "param1": {
+                    "type": "string",
+                    "description": "What this parameter is for"
+                },
+                "param2": {
+                    "type": "integer",
+                    "description": "Optional parameter with default"
+                }
+            },
+            "required": ["param1"]
+        }
+    }
+})
+```
+
+---
+
+## 🎬 Demo Scenarios
+
+### Scenario 1: RAG Influences Tool Parameters
+
+**User**: "Schedule a standard consultation meeting with Emma"
+
+**Agent**:
+1. Retrieves RAG context → finds "Standard consultation calls are 30 minutes"
+2. Uses this info to set duration = 30 minutes
+3. Calls calendar tool with correct duration
+4. Responds with citation `[scheduling_consultation_v1]`
+
+### Scenario 2: Multi-turn Conversation
+
+**User**: "I want to schedule a meeting"
+**Agent**: "I'd be happy to help! Who should I invite and when?"
+**User**: "With john@example.com tomorrow at 3pm"
+**Agent**: "What type of meeting? (consultation, demo, support call)"
+**User**: "A product demo"
+**Agent**: *Creates 45-minute meeting based on RAG context*
+
+### Scenario 3: Pure Tool Call (RAG Irrelevant)
+
+**User**: "Send an email to john@example.com saying hello"
+
+**Agent**:
+1. Retrieves context → policies not relevant
+2. Ignores irrelevant context
+3. Calls email tool directly
+4. Confirms action
+
+---
 
 ## 🐳 Docker Deployment
 
 ```bash
-# Build image
-docker build -t yt-rag .
+# Build the image
+docker build -t yt-agentic-rag .
 
-# Run container
-docker run -p 8080:8080 --env-file .env yt-rag
+# Run with environment variables
+docker run -p 8080:8080 --env-file .env yt-agentic-rag
 ```
 
-## 🔮 NextJS Frontend Integration
+See [DEPLOYMENT.md](DEPLOYMENT.md) for Google Cloud Run deployment.
 
-This backend is designed for seamless frontend integration:
+---
 
-**Frontend Setup (NextJS)**
-```javascript
-// lib/supabase.js
-import { createClient } from '@supabase/supabase-js'
+## 📁 Migration from yt-rag
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
+If you're upgrading from yt-rag:
 
-// API calls to your backend
-const response = await fetch('http://localhost:8000/answer', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ query: 'user question' })
-})
-```
+1. ✅ Your existing Supabase database works as-is
+2. ➕ Add new environment variables for Google APIs
+3. ✅ The `/answer` endpoint works identically  
+4. 🆕 Use `/agent` for new agentic capabilities
+5. 🔄 Re-seed with `/seed` to add scheduling policy documents
 
-**Future Auth Integration**
-When adding Google authentication:
-1. Enable Google Auth in Supabase
-2. The RLS policies are already configured
-3. Frontend and backend will share the same Supabase client
-4. No backend changes needed!
-
-## 📁 Project Structure
-
-```
-yt-rag/
-├── app/
-│   ├── core/
-│   │   ├── config.py      # Environment & settings
-│   │   └── database.py    # Supabase client & operations
-│   ├── models/
-│   │   ├── requests.py    # API request schemas
-│   │   ├── responses.py   # API response schemas
-│   │   └── entities.py    # Database entities
-│   ├── services/
-│   │   ├── embedding.py   # AI provider abstraction
-│   │   ├── rag.py        # RAG pipeline logic
-│   │   └── chunker.py    # Text processing utilities
-│   └── main.py           # FastAPI app & routes
-├── sql/
-│   └── init_supabase.sql # Database setup script
-├── .env.example          # Environment template
-├── requirements.txt      # Python dependencies
-├── Dockerfile           # Container configuration
-└── README.md           # This file
-```
-
-## 🛠️ Development
-
-### Running Tests
-```bash
-# Install dev dependencies
-pip install pytest pytest-asyncio httpx
-
-# Run tests (coming soon)
-pytest
-```
-
-### Code Quality
-```bash
-# Format code
-black app/
-isort app/
-
-# Lint code
-flake8 app/
-```
+---
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/new-tool`)
+3. Add your tool to `app/agents/tools/`
+4. Update tool schemas in `app/schemas/tool_schemas.py`
+5. Submit a Pull Request
+
+---
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+---
+
 ## 🙋‍♂️ Support
 
-- 📚 **Documentation**: Check the `/docs` endpoint when running
-- 🐛 **Issues**: [GitHub Issues](https://github.com/ShenSeanChen/yt-rag/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/ShenSeanChen/yt-rag/discussions)
+- 📚 **API Docs**: Visit `/docs` when running the server
+- 🐛 **Issues**: [GitHub Issues](https://github.com/ShenSeanChen/yt-agentic-rag/issues)
+- 💬 **Discord**: [Join our community](https://discord.com/invite/TKKPzZheua)
 
 ---
 
 **Built with ❤️ for the developer community**
 
-*This project demonstrates modern RAG architecture patterns and is perfect for learning, prototyping, or building production applications.*
+*From simple RAG to autonomous agents - this project shows the evolution of AI-powered applications.*

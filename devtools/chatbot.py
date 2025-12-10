@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 # Copyright 2024
-# Directory: yt-rag/chatbot.py
+# Directory: yt-agentic-rag/devtools/chatbot.py
 
 """
-Beautiful terminal-based chatbot to interact with the RAG backend API.
+Terminal Chatbot Client for Agentic RAG API.
+
+A beautiful terminal-based chatbot to interact with the Agentic RAG backend API.
 Enhanced with rich styling, colors, and modern UI elements.
+
+Usage:
+    python devtools/chatbot.py [base_url]
+    
+Example:
+    python devtools/chatbot.py http://localhost:8000
 """
 
 import requests

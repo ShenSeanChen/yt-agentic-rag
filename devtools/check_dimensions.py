@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 # Copyright 2024
-# Directory: yt-rag/check_dimensions.py
+# Directory: yt-agentic-rag/devtools/check_dimensions.py
 
 """
-Quick script to check embedding dimensions in the database.
+Debug Utility: Check Embedding Dimensions.
+
+Verifies that embeddings in the Supabase database have the correct dimensions.
+Useful for debugging vector search issues.
+
+Usage:
+    python devtools/check_dimensions.py
 """
 
 import os

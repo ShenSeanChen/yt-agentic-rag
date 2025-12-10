@@ -1,8 +1,11 @@
 # Copyright 2024
-# Directory: yt-rag/app/models/entities.py
+# Directory: yt-agentic-rag/app/schemas/entities.py
 
 """
-Database entity models for the RAG application.
+Database Entity Schemas - Models Matching Supabase Tables.
+
+Pydantic models that mirror the database schema:
+- RagChunk: Represents a document chunk with embedding in rag_chunks table
 """
 
 from typing import List, Optional

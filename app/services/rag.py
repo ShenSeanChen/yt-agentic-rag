@@ -1,5 +1,5 @@
 # Copyright 2024
-# Directory: yt-rag/app/services/rag.py
+# Directory: yt-agentic-rag/app/services/rag.py
 
 """
 RAG (Retrieval-Augmented Generation) service implementation.
@@ -10,7 +10,7 @@ import logging
 import time
 import re
 from typing import List, Dict, Any, Tuple
-from ..core.database import db
+from ..config.database import db
 from .embedding import embedding_service
 from .chat import chat_service
 from .chunker import chunker

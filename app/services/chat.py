@@ -1,5 +1,5 @@
 # Copyright 2024
-# Directory: yt-rag/app/services/chat.py
+# Directory: yt-agentic-rag/app/services/chat.py
 
 """
 Chat completion service for generating RAG responses.
@@ -10,7 +10,7 @@ import logging
 from typing import List, Dict, Any
 import openai
 import anthropic
-from ..core.config import get_settings
+from ..config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

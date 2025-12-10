@@ -1,10 +1,23 @@
 #!/usr/bin/env python3
 # Copyright 2024
-# Directory: yt-rag/test_setup.py
+# Directory: yt-agentic-rag/devtools/test_setup.py
 
 """
-Test script to verify RAG backend setup is working correctly.
-Run this after completing the setup steps.
+Setup Verification Script.
+
+Tests the complete Agentic RAG backend setup without starting the server.
+Run this after completing the setup steps to verify everything works.
+
+Usage:
+    python devtools/test_setup.py
+
+Tests:
+    1. Module imports
+    2. Environment configuration
+    3. Database connection
+    4. Schema validation
+    5. Document seeding
+    6. RAG query functionality
 """
 
 import asyncio
@@ -12,8 +25,8 @@ import sys
 import os
 from pathlib import Path
 
-# Add the app directory to Python path
-sys.path.insert(0, str(Path(__file__).parent))
+# Add the project root to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 async def test_setup():
     """Test the complete RAG setup."""
@@ -23,8 +36,8 @@ async def test_setup():
     try:
         # Test 1: Import modules
         print("1️⃣  Testing imports...")
-        from app.core.config import get_settings
-        from app.core.database import db
+        from app.config.settings import get_settings
+        from app.config.database import db
         from app.services.rag import rag_service
         print("   ✅ All modules imported successfully")
         

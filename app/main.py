@@ -1,9 +1,18 @@
 # Copyright 2024
-# Directory: yt-rag/app/main.py
+# Directory: yt-agentic-rag/app/main.py
 
 """
-FastAPI application for RAG (Retrieval-Augmented Generation) backend.
-Provides endpoints for document seeding and question answering with citations.
+FastAPI application for Agentic RAG (Retrieval-Augmented Generation) backend.
+
+This application provides:
+- Traditional RAG endpoints for question answering (/answer)
+- Agentic RAG endpoints with tool calling (/agent)
+- Document seeding for the knowledge base (/seed)
+- Health checks and API documentation
+
+The key difference between /answer and /agent:
+- /answer: Retrieve context → Generate answer (RAG only)
+- /agent: Retrieve context → Reason → Execute tools → Generate answer (Agentic RAG)
 """
 
 import logging
@@ -13,12 +22,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response, JSONResponse
 
-from .core.config import get_settings
-from .core.database import db
-from .models.requests import SeedRequest, AnswerRequest
-from .models.responses import SeedResponse, AnswerResponse, HealthResponse, ErrorResponse
+from .config.settings import get_settings
+from .config.database import db
+from .schemas.requests import SeedRequest, AnswerRequest, AgentRequest
+from .schemas.responses import (
+    SeedResponse, 
+    AnswerResponse, 
+    AgentResponse,
+    HealthResponse, 
+    AgentDebugInfo,
+    ToolCallInfo, 
+    ToolResultInfo
+)
 from .services.rag import rag_service
+from .agents.orchestrator import agent_service
 from .data.default_documents import DEFAULT_DOCUMENTS
+from .schemas.tool_schemas import TOOL_DEFINITIONS
 
 # Configure logging
 logging.basicConfig(
@@ -32,9 +51,9 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan events."""
+    """Application lifespan events for startup and shutdown."""
     # Startup
-    logger.info("Starting RAG API application")
+    logger.info("Starting Agentic RAG API application")
     
     try:
         # Initialize database connection
@@ -52,15 +71,33 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("Shutting down RAG API application")
+    logger.info("Shutting down Agentic RAG API application")
     await db.disconnect()
 
 
 # Create FastAPI application
 app = FastAPI(
-    title="RAG AI Agent Backend",
-    description="A minimal, production-ready FastAPI backend demonstrating Retrieval-Augmented Generation (RAG) with vector similarity search.",
-    version="1.0.0",
+    title="Agentic RAG AI Backend",
+    description="""
+A production-ready FastAPI backend demonstrating **Agentic RAG** - combining 
+Retrieval-Augmented Generation with autonomous tool-calling capabilities.
+
+## Features
+- **RAG Pipeline**: Vector similarity search with Supabase pgvector
+- **Agent Tools**: Google Calendar scheduling, Email sending
+- **Multi-AI Provider**: OpenAI & Anthropic support
+- **Citation-based answers**: Source tracking for all responses
+
+## Key Endpoints
+- `POST /answer` - Traditional RAG (retrieve + answer)
+- `POST /agent` - Agentic RAG (retrieve + reason + act + answer)
+- `GET /tools` - List available agent tools
+
+## What's the difference?
+- `/answer`: Good for Q&A - retrieves context and generates answers
+- `/agent`: Good for actions - can schedule meetings, send emails, AND answer questions
+    """,
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -70,8 +107,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",  # NextJS default
         "http://localhost:3001",  # Alternative port
-        "https://yt-rag.vercel.app",  # Production frontend
-        "*"  # Allow all for development (remove in production)
+        "https://yt-agentic-rag.vercel.app",  # Production frontend
+        "*"  # Allow all for development (restrict in production)
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -82,9 +119,13 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
+# ============================================================================
+# General Endpoints
+# ============================================================================
+
 @app.get("/chat", tags=["General"])
 async def chat_interface():
-    """Serve the chat interface."""
+    """Serve the chat interface HTML page."""
     return FileResponse("static/chat.html")
 
 
@@ -96,17 +137,19 @@ async def favicon():
 
 @app.get("/", tags=["General"])
 async def root():
-    """Root endpoint with API information."""
+    """Root endpoint with API information and available endpoints."""
     return {
-        "message": "Welcome to RAG AI Agent Backend",
-        "version": "1.0.0",
+        "message": "Welcome to Agentic RAG AI Backend",
+        "version": "2.0.0",
+        "description": "RAG + Tool Calling = Agentic RAG",
         "docs": "/docs",
         "endpoints": {
             "health": "/healthz",
-            "seed": "/seed",
-            "answer": "/answer",
-            "documents": "/documents",
-            "greet": "/greet/{name}"
+            "seed": "/seed (POST) - Seed knowledge base",
+            "answer": "/answer (POST) - Traditional RAG Q&A",
+            "agent": "/agent (POST) - Agentic RAG with tools",
+            "documents": "/documents (GET) - View default documents",
+            "tools": "/tools (GET) - List available tools"
         }
     }
 
@@ -117,19 +160,27 @@ async def greet(name: str):
     Greet endpoint that returns a personalized greeting.
     
     Args:
-        name (str): Name of the person to greet
+        name: Name of the person to greet
         
     Returns:
         Personalized greeting message
     """
-    return {"message": f"Hello, {name}! I think you are great!"}
+    return {"message": f"Hello, {name}! Welcome to Agentic RAG!"}
 
+
+# ============================================================================
+# Health & Status Endpoints
+# ============================================================================
 
 @app.get("/healthz", response_model=HealthResponse, tags=["Health"])
 async def health_check():
-    """Health check endpoint with database connectivity test."""
+    """
+    Health check endpoint with database connectivity test.
+    
+    Returns:
+        Health status and database connection state
+    """
     try:
-        # Test database connection
         db_healthy = await db.health_check()
         
         return HealthResponse(
@@ -145,24 +196,34 @@ async def health_check():
         )
 
 
-@app.get("/documents", tags=["General"])
+# ============================================================================
+# Knowledge Base Endpoints
+# ============================================================================
+
+@app.get("/documents", tags=["Knowledge Base"])
 async def get_documents():
     """
     Get the default documents used for seeding the knowledge base.
     
     Returns:
-        List of default documents with their chunk_id, source, and text
+        List of default documents with chunk_id, source, and text
     """
     return {"documents": DEFAULT_DOCUMENTS}
 
 
-@app.post("/seed", response_model=SeedResponse, tags=["RAG"])
+@app.post("/seed", response_model=SeedResponse, tags=["Knowledge Base"])
 async def seed_documents(request: SeedRequest = SeedRequest()):
     """
     Seed the knowledge base with documents.
     
-    If no documents are provided, seeds with default policy/FAQ documents.
+    If no documents are provided, seeds with default policy/FAQ/scheduling documents.
     Documents are chunked, embedded, and stored in the vector database.
+    
+    Args:
+        request: Optional list of documents to seed
+        
+    Returns:
+        Number of chunks successfully inserted
     """
     try:
         logger.info("Starting document seeding process")
@@ -194,27 +255,38 @@ async def seed_documents(request: SeedRequest = SeedRequest()):
         )
 
 
+# ============================================================================
+# RAG Endpoints (Traditional)
+# ============================================================================
+
 @app.post("/answer", response_model=AnswerResponse, tags=["RAG"])
 async def answer_question(request: AnswerRequest):
     """
-    Answer a question using RAG (Retrieval-Augmented Generation).
+    Answer a question using traditional RAG (no tool calling).
     
     Pipeline:
     1. Embed the query
     2. Vector similarity search to find relevant chunks
     3. Generate answer using LLM with context
-    4. Return answer with citations and debug info
+    4. Return answer with citations
+    
+    Use this endpoint for pure Q&A without actions.
+    For actions (scheduling, email), use /agent instead.
+    
+    Args:
+        request: Query and optional top_k parameter
+        
+    Returns:
+        Generated answer with citations and debug info
     """
     try:
-        logger.info(f"Processing query: '{request.query[:100]}...'")
+        logger.info(f"Processing RAG query: '{request.query[:100]}...'")
         
-        # Process query through RAG pipeline
         result = await rag_service.answer_query(
             query=request.query,
             top_k=request.top_k
         )
         
-        # Convert to response model
         response = AnswerResponse(
             text=result['text'],
             citations=result['citations'],
@@ -224,28 +296,130 @@ async def answer_question(request: AnswerRequest):
             }
         )
         
-        logger.info(f"Query processed successfully in {result['debug']['latency_ms']}ms")
+        logger.info(f"RAG query processed in {result['debug']['latency_ms']}ms")
         
         return response
         
     except Exception as e:
-        logger.error(f"Query processing failed: {e}")
+        logger.error(f"RAG query processing failed: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to process query: {str(e)}"
         )
 
 
-# Error handlers
+# ============================================================================
+# Agent Endpoints (Agentic RAG with Tools)
+# ============================================================================
+
+@app.get("/tools", tags=["Agent"])
+async def list_tools():
+    """
+    List all available agent tools.
+    
+    Returns:
+        List of tools with name and description
+    """
+    return {
+        "tools": [
+            {
+                "name": t["function"]["name"],
+                "description": t["function"]["description"],
+                "parameters": t["function"]["parameters"]
+            }
+            for t in TOOL_DEFINITIONS
+        ]
+    }
+
+
+@app.post("/agent", response_model=AgentResponse, tags=["Agent"])
+async def agent_query(request: AgentRequest):
+    """
+    Process a query using Agentic RAG (with tool calling).
+    
+    Pipeline:
+    1. Retrieve relevant context from RAG
+    2. Agent decides if tools are needed based on query + context
+    3. Execute tools if necessary (calendar, email, etc.)
+    4. Generate final response with citations and tool results
+    
+    This endpoint can:
+    - Answer questions (like /answer)
+    - Take actions (schedule meetings, send emails)
+    - Use RAG context to inform tool parameters
+    
+    Example queries:
+    - "What is your return policy?" → RAG answer
+    - "Schedule a meeting with john@example.com for Tuesday at 2pm" → Tool call
+    - "Schedule a standard consultation with John" → RAG (get duration) + Tool call
+    
+    Args:
+        request: Query, optional user_id, and top_k
+        
+    Returns:
+        Response with text, tool_calls, tool_results, citations, and debug info
+    """
+    try:
+        logger.info(f"Processing agent query: '{request.query[:100]}...'")
+        
+        # Convert chat_history from Pydantic models to dicts if provided
+        chat_history = None
+        if request.chat_history:
+            chat_history = [
+                {"role": msg.role, "content": msg.content}
+                for msg in request.chat_history
+            ]
+        
+        result = await agent_service.process_query(
+            query=request.query,
+            chat_history=chat_history,
+            user_id=request.user_id,
+            top_k=request.top_k
+        )
+        
+        # Build response with proper model instances
+        response = AgentResponse(
+            text=result['text'],
+            tool_calls=[
+                ToolCallInfo(**tc) for tc in result.get('tool_calls', [])
+            ],
+            tool_results=[
+                ToolResultInfo(**tr) for tr in result.get('tool_results', [])
+            ],
+            citations=result.get('citations', []),
+            debug=AgentDebugInfo(**result['debug'])
+        )
+        
+        logger.info(
+            f"Agent query processed in {result['debug']['latency_ms']}ms, "
+            f"tools called: {result['debug'].get('tools_called', [])}"
+        )
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Agent query processing failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to process agent query: {str(e)}"
+        )
+
+
+# ============================================================================
+# Error Handlers
+# ============================================================================
+
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
-    """Handle 404 errors."""
+    """Handle 404 errors with helpful information."""
     return JSONResponse(
         status_code=404,
         content={
             "error": "Not Found",
             "detail": "The requested endpoint does not exist",
-            "available_endpoints": ["/", "/healthz", "/seed", "/answer", "/docs"]
+            "available_endpoints": [
+                "/", "/healthz", "/seed", "/answer", "/agent", "/tools", "/docs"
+            ]
         }
     )
 
@@ -262,6 +436,10 @@ async def internal_error_handler(request, exc):
         }
     )
 
+
+# ============================================================================
+# Main Entry Point
+# ============================================================================
 
 if __name__ == "__main__":
     import uvicorn
