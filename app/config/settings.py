@@ -76,7 +76,7 @@ class Settings(BaseSettings):
     # Email address for Google Calendar and Gmail (domain-wide delegation)
     # This is the email that will create calendar events and send emails
     google_calendar_email: str = Field(
-        default="sean@automanus.io",
+        default="",
         env="GOOGLE_CALENDAR_EMAIL"
     )
     

@@ -6,8 +6,6 @@ A production-ready FastAPI backend demonstrating **Agentic RAG** - combining Ret
 
 📹 **YouTube Tutorial**: [Coming Soon]
 
-🚀 **Live Demo**: [App Link](https://yt-agentic-rag.vercel.app/chat)
-
 ☕️ **Support**: [Buy me a coffee](https://buy.stripe.com/5kA176bA895ggog4gh)
 
 🤖 **Discord**: [Join our community](https://discord.com/invite/TKKPzZheua)
@@ -255,8 +253,8 @@ nano .env  # or use your preferred editor
 # SUPABASE CONFIGURATION (Required)
 # ===========================================
 SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
 # ===========================================
 # OPENAI CONFIGURATION (Required)
